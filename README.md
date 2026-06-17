@@ -25,7 +25,58 @@ Browser (Vite/React)
 Hosted on Render / Vercel / Netlify (static `dist/`)
 ```
 
-Reference SQL for tables and RLS lives in [`supabase/schema.reference.sql`](supabase/schema.reference.sql).
+Schema is managed as versioned migrations in [`supabase/migrations/`](supabase/migrations/).
+
+## Supabase GitHub schema automation
+
+This repo is ready for [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration) — push SQL migrations from Git and Supabase applies them automatically.
+
+### One-time setup (in Supabase Dashboard)
+
+1. Create a new Supabase project (or open an existing one).
+2. On the **GitHub (optional)** step, click **Choose GitHub repository** and select [`codeneedforpass/LOC-KER-LOVER`](https://github.com/codeneedforpass/LOC-KER-LOVER).
+3. Set **Working directory** to `.` (the `supabase/` folder is at the repo root).
+4. Enable:
+   - **Deploy to production** — applies new migrations when you push/merge to `main`
+   - **Automatic branching** *(optional)* — creates preview DB branches per GitHub PR
+5. Finish project creation and authorize the GitHub app when prompted.
+
+### What gets deployed from Git
+
+| Path | Purpose |
+|------|---------|
+| `supabase/migrations/*.sql` | Database schema changes (applied in order) |
+| `supabase/config.toml` | Preview-branch config (Auth URLs, etc.) |
+| `supabase/seed.sql` | Sample data for **preview branches only** (not production) |
+
+### Test the automation
+
+After connecting the repo, Supabase should apply `supabase/migrations/20260617120000_initial_schema.sql` automatically.
+
+To verify on a second push, add a new migration:
+
+```bash
+# With Supabase CLI installed locally:
+supabase migration new add_pairing_index
+# Edit the new file in supabase/migrations/, then:
+git add supabase/migrations/
+git commit -m "Add pairing index migration"
+git push
+```
+
+Supabase compares `supabase/migrations/` against its `schema_migrations` table and runs only new files.
+
+**Important:** Once you use migrations, avoid changing production schema in the SQL Editor — always add a new migration file instead, or `db push` / GitHub deploys will drift.
+
+### Copy keys into `.env.local`
+
+After the project is created, from **Project Settings → API**:
+
+```env
+VITE_SUPABASE_URL=https://xxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_USE_MOCK_DATA=false
+```
 
 ## Local development
 
