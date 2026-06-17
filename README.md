@@ -9,8 +9,8 @@ A secure, mutual location-sharing app for couples. The UI currently runs as an *
 | **Frontend hosting** | [Render](https://render.com) Static Site, [Vercel](https://vercel.com), [Netlify](https://netlify.com), or [Cloudflare Pages](https://pages.cloudflare.com) | Free CDN deploy for Vite/React SPAs |
 | **Database + Realtime** | [Supabase](https://supabase.com) | Postgres, live location sync via Realtime, Storage for couple photos |
 | **Auth** | Supabase Auth *(default)* or [Clerk](https://clerk.com) *(optional)* | Pairing, sessions, OAuth — Supabase keeps everything in one project |
-| **Maps** | [Leaflet](https://leafletjs.com) + OpenStreetMap *(free)* or [Mapbox](https://mapbox.com) | Replace the SVG simulator with a real map when ready |
-| **Push (later)** | [OneSignal](https://onesignal.com) | Geofence / SOS alerts on mobile web |
+| **Maps** | [Leaflet](https://leafletjs.com) + [OpenStreetMap](https://www.openstreetmap.org) *(free, no API key)* | Real map in the dashboard simulator |
+| **Push** | [OneSignal](https://onesignal.com) | SOS, geofence, and partner alerts (web push) |
 
 No Gemini or AI Studio is required — the app does not call any AI APIs.
 
@@ -28,7 +28,10 @@ Hosted on Render / Vercel / Netlify (static `dist/`)
 ## Supabase setup (manual)
 
 1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard) — **skip** the GitHub repository step.
-2. Open **SQL Editor**, paste the contents of [`supabase/schema.reference.sql`](supabase/schema.reference.sql), and click **Run**.
+2. Open **SQL Editor**, paste and run in order:
+   - [`supabase/schema.reference.sql`](supabase/schema.reference.sql)
+   - [`supabase/seed.demo.sql`](supabase/seed.demo.sql) *(dual-phone demo)*
+   - [`supabase/clerk.schema.sql`](supabase/clerk.schema.sql) *(Clerk user linking)*
 3. Copy your keys from **Project Settings → API** into `.env.local`:
 
 ```env
@@ -38,6 +41,30 @@ VITE_USE_MOCK_DATA=false
 ```
 
 4. Enable **Realtime** on the `locations` table in **Database → Replication** if it is not already active.
+
+## Clerk authentication
+
+Linked Clerk application: `app_3FGuAAJPDSrZ89ctFuyPYH9SbuN`
+
+1. Copy your **publishable key** from [Clerk Dashboard → API Keys](https://dashboard.clerk.com/last-active?path=api-keys) into `.env.local`:
+   ```env
+   VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+   ```
+2. Run `supabase/clerk.schema.sql` in the SQL Editor (adds `clerk_id` to profiles).
+3. Restart `npm run dev` — sign up or sign in via the header buttons.
+4. On first sign-in, your Clerk account is synced to a Supabase `profiles` row automatically.
+
+## OneSignal push notifications
+
+1. Create a **Web** app at [onesignal.com](https://onesignal.com).
+2. Set **Site URL** to your `VITE_APP_URL` (e.g. `http://localhost:3000` for dev).
+3. Copy **OneSignal App ID** into `.env.local`:
+   ```env
+   VITE_ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   ```
+4. Service workers live in `public/onesignal/` (already included).
+5. Sign in with Clerk, then click **Enable push** in the header.
+6. For partner-to-partner delivery, create a **Journey** in OneSignal triggered by user tags (`last_alert_type`, `partner_id`) or add a server route with your REST API key (never in the frontend).
 
 ## Local development
 

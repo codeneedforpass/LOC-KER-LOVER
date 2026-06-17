@@ -19,7 +19,7 @@ interface PhoneAppProps {
   user: User;
   partner: User;
   onUpdateUser: (userId: 'alex' | 'taylor', updates: Partial<User>) => void;
-  onPair: (code: string) => boolean;
+  onPair: (code: string) => boolean | Promise<boolean>;
   onUnpair: () => void;
   onAddNotification: (userId: 'alex' | 'taylor', title: string, msg: string, type: AppNotification['type']) => void;
   notifications: AppNotification[];
@@ -132,9 +132,9 @@ export default function PhoneApp({
     onAddNotification(userId, 'Account verified!', 'Start pairing with your partner.', 'pair_request');
   };
 
-  const handlePairSubmit = () => {
+  const handlePairSubmit = async () => {
     setPairingError('');
-    const success = onPair(pairingCodeInput.trim().toUpperCase());
+    const success = await onPair(pairingCodeInput.trim().toUpperCase());
     if (success) {
       setCurrentScreen('dashboard');
     } else {

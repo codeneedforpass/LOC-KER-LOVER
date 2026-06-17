@@ -23,6 +23,10 @@ export const env = {
   oneSignalAppId: read('VITE_ONESIGNAL_APP_ID'),
 } as const;
 
+export function isClerkConfigured(): boolean {
+  return Boolean(env.clerk.publishableKey);
+}
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(env.supabase.url && env.supabase.anonKey);
 }

@@ -4,9 +4,10 @@
  */
 
 import { User, SavedPlace } from '../types';
+import { DEMO_USER_A_ID, DEMO_USER_B_ID, DEMO_PAIRING_CODES } from '../lib/demoUsers';
 
 export const INITIAL_USER_A: User = {
-  id: 'user-alex',
+  id: DEMO_USER_A_ID,
   email: 'alex@lockerlover.app',
   fullName: 'Alex Carter',
   latitude: 37.7749, // Sweethearts Cafe
@@ -15,14 +16,14 @@ export const INITIAL_USER_A: User = {
   isCharging: false,
   lastSeen: 'Just now',
   isLocationSharing: true,
-  partnerId: 'user-taylor',
-  pairingCode: 'LVR-9426',
+  partnerId: DEMO_USER_B_ID,
+  pairingCode: DEMO_PAIRING_CODES.alex,
   profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
   status: 'online',
 };
 
 export const INITIAL_USER_B: User = {
-  id: 'user-taylor',
+  id: DEMO_USER_B_ID,
   email: 'taylor@lockerlover.app',
   fullName: 'Taylor Vance',
   latitude: 37.7833, // Lovers Point Lookout
@@ -31,8 +32,8 @@ export const INITIAL_USER_B: User = {
   isCharging: true,
   lastSeen: '2m ago',
   isLocationSharing: true,
-  partnerId: 'user-alex',
-  pairingCode: 'LVR-1378',
+  partnerId: DEMO_USER_A_ID,
+  pairingCode: DEMO_PAIRING_CODES.taylor,
   profilePicture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
   status: 'moving',
 };

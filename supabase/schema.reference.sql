@@ -7,6 +7,7 @@ create table public.profiles (
   full_name text not null,
   profile_picture text,
   pairing_code text unique not null,
+  clerk_id text unique,
   partner_id uuid references public.profiles (id),
   is_location_sharing boolean not null default false,
   status text not null default 'offline' check (status in ('online', 'moving', 'offline', 'paused')),
