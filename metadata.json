@@ -1,0 +1,5 @@
+{
+  "name": "Loc-Ker Lover",
+  "description": "A secure, mutual location-sharing app exclusively for couples.",
+  "requestFramePermissions": ["geolocation"]
+}
