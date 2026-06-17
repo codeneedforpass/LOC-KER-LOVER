@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+android/local.properties
+*.apk
+Loc-Ker-Lover-debug.apk

@@ -11,7 +11,6 @@ function read(key: keyof ImportMetaEnv): string | undefined {
 export const env = {
   appUrl: read('VITE_APP_URL') ?? 'http://localhost:3000',
   appEnv: (read('VITE_APP_ENV') ?? 'development') as ImportMetaEnv['VITE_APP_ENV'],
-  useMockData: read('VITE_USE_MOCK_DATA') !== 'false',
   supabase: {
     url: read('VITE_SUPABASE_URL'),
     anonKey: read('VITE_SUPABASE_ANON_KEY'),

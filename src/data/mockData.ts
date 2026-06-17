@@ -3,40 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, SavedPlace } from '../types';
-import { DEMO_USER_A_ID, DEMO_USER_B_ID, DEMO_PAIRING_CODES } from '../lib/demoUsers';
-
-export const INITIAL_USER_A: User = {
-  id: DEMO_USER_A_ID,
-  email: 'alex@lockerlover.app',
-  fullName: 'Alex Carter',
-  latitude: 37.7749, // Sweethearts Cafe
-  longitude: -122.4194,
-  batteryPercentage: 84,
-  isCharging: false,
-  lastSeen: 'Just now',
-  isLocationSharing: true,
-  partnerId: DEMO_USER_B_ID,
-  pairingCode: DEMO_PAIRING_CODES.alex,
-  profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-  status: 'online',
-};
-
-export const INITIAL_USER_B: User = {
-  id: DEMO_USER_B_ID,
-  email: 'taylor@lockerlover.app',
-  fullName: 'Taylor Vance',
-  latitude: 37.7833, // Lovers Point Lookout
-  longitude: -122.4167,
-  batteryPercentage: 42,
-  isCharging: true,
-  lastSeen: '2m ago',
-  isLocationSharing: true,
-  partnerId: DEMO_USER_A_ID,
-  pairingCode: DEMO_PAIRING_CODES.taylor,
-  profilePicture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
-  status: 'moving',
-};
+import { SavedPlace } from '../types';
 
 export const PRESET_PLACES: SavedPlace[] = [
   {
@@ -51,8 +18,8 @@ export const PRESET_PLACES: SavedPlace[] = [
     id: 'place-work',
     name: 'Creative Studio (Work)',
     type: 'work',
-    latitude: 37.7800,
-    longitude: -122.4050,
+    latitude: 37.78,
+    longitude: -122.405,
     radius: 120,
   },
   {
@@ -63,41 +30,22 @@ export const PRESET_PLACES: SavedPlace[] = [
     longitude: -122.4194,
     radius: 50,
   },
-  {
-    id: 'place-lookout',
-    name: 'Lovers Point Lookout',
-    type: 'other',
-    latitude: 37.7833,
-    longitude: -122.4167,
-    radius: 150,
-  },
-  {
-    id: 'place-park',
-    name: 'Greenridge Park',
-    type: 'school',
-    latitude: 37.7600,
-    longitude: -122.4100,
-    radius: 200,
-  }
 ];
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c; // returns distance in km
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 export function formatDistance(km: number): string {
   if (km < 1) {
-    const meters = Math.round(km * 1000);
-    return `${meters} meters`;
+    return `${Math.round(km * 1000)} meters`;
   }
-  const miles = km * 0.621371;
-  return `${miles.toFixed(2)} miles`;
+  return `${(km * 0.621371).toFixed(2)} miles`;
 }

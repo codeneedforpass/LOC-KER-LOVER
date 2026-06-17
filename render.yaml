@@ -14,8 +14,6 @@ services:
         sync: false
       - key: VITE_APP_ENV
         value: production
-      - key: VITE_USE_MOCK_DATA
-        value: "true"
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY

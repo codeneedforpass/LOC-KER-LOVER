@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Loc-Ker Lover</string>
+    <string name="title_activity_main">Loc-Ker Lover</string>
+    <string name="package_name">com.lockerlover.app</string>
+    <string name="custom_url_scheme">com.lockerlover.app</string>
+</resources>

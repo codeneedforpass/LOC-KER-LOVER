@@ -15,13 +15,12 @@ import {
 } from 'lucide-react';
 
 interface PhoneAppProps {
-  userId: 'alex' | 'taylor';
   user: User;
   partner: User;
-  onUpdateUser: (userId: 'alex' | 'taylor', updates: Partial<User>) => void;
+  onUpdateSelf: (updates: Partial<User>) => void;
   onPair: (code: string) => boolean | Promise<boolean>;
   onUnpair: () => void;
-  onAddNotification: (userId: 'alex' | 'taylor', title: string, msg: string, type: AppNotification['type']) => void;
+  onNotifyUser: (targetUserId: string, title: string, msg: string, type: AppNotification['type']) => void;
   notifications: AppNotification[];
   onClearNotifications: () => void;
   onDeleteAccount: () => void;
@@ -47,21 +46,21 @@ type ScreenType =
   | 'future_gallery';
 
 export default function PhoneApp({
-  userId,
   user,
   partner,
-  onUpdateUser,
+  onUpdateSelf,
   onPair,
   onUnpair,
-  onAddNotification,
+  onNotifyUser,
   notifications,
   onClearNotifications,
   onDeleteAccount,
   chatMessages,
   onSendChatMessage,
 }: PhoneAppProps) {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('splash');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); // Logged in by default to show interactive couple dashboard directly, but can log out
+  const partnerId = partner.id && partner.partnerId === user.id ? partner.id : null;
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>(user.partnerId ? 'dashboard' : 'pair');
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [emailInput, setEmailInput] = useState(user.email);
   const [passwordInput, setPasswordInput] = useState('password123');
@@ -84,25 +83,8 @@ export default function PhoneApp({
   const statuses: Array<'online' | 'moving' | 'offline' | 'paused'> = ['online', 'moving', 'offline', 'paused'];
 
   useEffect(() => {
-    // Simulate auto-refresh timer if enabled
-    let intervalId: NodeJS.Timeout;
-    if (user.isLocationSharing && user.status !== 'paused' && isAuthenticated) {
-      const seconds = refreshInterval === '5s' ? 5000 : refreshInterval === '10s' ? 10000 : 30000;
-      intervalId = setInterval(() => {
-        // Soft jitter coordinates slightly to simulate natural GPS drift/movement
-        const latJitter = (Math.random() - 0.5) * 0.001;
-        const lonJitter = (Math.random() - 0.5) * 0.001;
-        onUpdateUser(userId, {
-          latitude: user.latitude + latJitter,
-          longitude: user.longitude + lonJitter,
-          lastSeen: 'Just now',
-        });
-      }, seconds);
-    }
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [user.latitude, user.longitude, user.isLocationSharing, user.status, refreshInterval, isAuthenticated]);
+    setCurrentScreen(user.partnerId ? 'dashboard' : 'pair');
+  }, [user.partnerId]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +92,10 @@ export default function PhoneApp({
       alert('Please enter a valid email and password');
       return;
     }
-    onUpdateUser(userId, { email: emailInput, fullName: nameInput });
+    onUpdateSelf({ email: emailInput, fullName: nameInput });
     setIsAuthenticated(true);
     setCurrentScreen('dashboard');
-    onAddNotification(userId, 'Welcome back!', 'Securely logged in using Clerk.', 'status_change');
+    onNotifyUser(user.id, 'Welcome back!', 'Securely logged in using Clerk.', 'status_change');
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -122,14 +104,14 @@ export default function PhoneApp({
       alert('Please fill out all fields correctly.');
       return;
     }
-    onUpdateUser(userId, { fullName: nameInput, email: emailInput });
+    onUpdateSelf({ fullName: nameInput, email: emailInput });
     setCurrentScreen('verify');
   };
 
   const handleVerify = () => {
     setIsAuthenticated(true);
     setCurrentScreen('pair');
-    onAddNotification(userId, 'Account verified!', 'Start pairing with your partner.', 'pair_request');
+    onNotifyUser(user.id, 'Account verified!', 'Start pairing with your partner.', 'pair_request');
   };
 
   const handlePairSubmit = async () => {
@@ -138,18 +120,20 @@ export default function PhoneApp({
     if (success) {
       setCurrentScreen('dashboard');
     } else {
-      setPairingError('Invalid partner code. Try matching LVR-9426 or LVR-1378.');
+      setPairingError('Invalid partner code. Ask your partner for their LVR- code.');
     }
   };
 
   const triggerSOS = () => {
     setSosActive(true);
-    onAddNotification(
-      userId === 'alex' ? 'taylor' : 'alex',
-      '🚨 EMERGENCY SOS ALERT',
-      `${user.fullName} triggered an emergency SOS! Tap to locate.`,
-      'emergency'
-    );
+    if (partnerId) {
+      onNotifyUser(
+        partnerId,
+        '🚨 EMERGENCY SOS ALERT',
+        `${user.fullName} triggered an emergency SOS! Tap to locate.`,
+        'emergency'
+      );
+    }
     // Auto turn off after 5 seconds
     setTimeout(() => {
       setSosActive(false);
@@ -160,35 +144,30 @@ export default function PhoneApp({
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
-      onUpdateUser(userId, { lastSeen: 'Just now' });
-      onAddNotification(userId, 'Location Synced', 'Successfully refreshed current coordinate beacons with Supabase Realtime.', 'sharing_start');
+      onUpdateSelf({ lastSeen: 'Just now' });
+      onNotifyUser(user.id, 'Location Synced', 'Successfully refreshed current coordinate beacons with Supabase Realtime.', 'sharing_start');
     }, 800);
   };
 
   const toggleLocationSharing = () => {
     const isNowSharing = !user.isLocationSharing;
-    onUpdateUser(userId, { isLocationSharing: isNowSharing });
+    onUpdateSelf({ isLocationSharing: isNowSharing });
     const title = isNowSharing ? 'Sharing Resumed' : 'Location Paused';
     const msg = isNowSharing ? `${user.fullName} is now active on map.` : `${user.fullName} paused location tracking.`;
-    
-    onAddNotification(userId === 'alex' ? 'taylor' : 'alex', title, msg, isNowSharing ? 'sharing_start' : 'sharing_stop');
+    if (partnerId) onNotifyUser(partnerId, title, msg, isNowSharing ? 'sharing_start' : 'sharing_stop');
   };
 
   const changeStatus = (newStatus: 'online' | 'moving' | 'offline' | 'paused') => {
-    onUpdateUser(userId, { status: newStatus });
-    onAddNotification(
-      userId === 'alex' ? 'taylor' : 'alex',
-      'Status Changed',
-      `${user.fullName} is now ${newStatus}.`,
-      'status_change'
-    );
+    onUpdateSelf({ status: newStatus });
+    if (partnerId) {
+      onNotifyUser(partnerId, 'Status Changed', `${user.fullName} is now ${newStatus}.`, 'status_change');
+    }
   };
 
-  const isPaired = user.partnerId && partner && partner.partnerId === user.id;
+  const isPaired = Boolean(user.partnerId && partnerId);
   const filterNotifications = notifications.filter((n) => n.userId === user.id);
 
-  // Compute stats
-  const dist = calculateDistance(user.latitude, user.longitude, partner.latitude, partner.longitude);
+  const dist = isPaired ? calculateDistance(user.latitude, user.longitude, partner.latitude, partner.longitude) : 0;
   const formattedDist = formatDistance(dist);
 
   return (
@@ -847,7 +826,7 @@ export default function PhoneApp({
               <MapPin className="w-10 h-10 text-[#FF4D6D] mx-auto mb-2 animate-bounce animate-duration-1000" />
               <h3 className="font-bold text-xs text-[#2B2D42] font-serif italic leading-snug">Active Map Session</h3>
               <p className="text-[10px] text-[#2B2D42]/70 leading-normal mt-1">
-                You are currently tracking your partner in real-time. Please refer to the **Desktop Interactive Playground Grid Map** on the left screen to inspect and click to move pins!
+                Live partner location from Supabase. Enable sharing in Settings if you do not see updates.
               </p>
               <button
                 onClick={() => setCurrentScreen('dashboard')}
@@ -1049,8 +1028,8 @@ export default function PhoneApp({
               onClick={() => {
                 setIsAuthenticated(false);
                 setCurrentScreen('splash');
-                onUpdateUser(userId, { status: 'offline' });
-                onAddNotification(userId === 'alex' ? 'taylor' : 'alex', 'Partner offline', `${user.fullName} logged out of application.`, 'status_change');
+                onUpdateSelf({ status: 'offline' });
+                if (partnerId) onNotifyUser(partnerId, 'Partner offline', `${user.fullName} logged out of application.`, 'status_change');
               }}
               className="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs rounded-2xl transition-all border border-rose-100 shadow-xs flex items-center justify-center gap-1.5"
             >
@@ -1082,7 +1061,7 @@ export default function PhoneApp({
                       key={interval}
                       onClick={() => {
                         setRefreshInterval(interval);
-                        onAddNotification(userId, 'Settings Updated', `Automatic refresh interval changed to ${interval}`, 'status_change');
+                        onNotifyUser(user.id, 'Settings Updated', `Automatic refresh interval changed to ${interval}`, 'status_change');
                       }}
                       className={`py-1.5 rounded-lg text-xs font-extrabold transition-all border ${
                         refreshInterval === interval

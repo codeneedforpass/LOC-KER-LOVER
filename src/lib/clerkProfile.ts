@@ -1,5 +1,5 @@
 import type { useUser } from '@clerk/react';
-import { getSupabase } from './supabase';
+import { getAuthenticatedSupabase } from './supabaseAuth';
 
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 
@@ -8,7 +8,7 @@ function generatePairingCode(): string {
 }
 
 export async function syncClerkProfileToSupabase(user: ClerkUser): Promise<void> {
-  const supabase = getSupabase();
+  const supabase = getAuthenticatedSupabase();
   if (!supabase) return;
 
   const email = user.primaryEmailAddress?.emailAddress ?? '';
